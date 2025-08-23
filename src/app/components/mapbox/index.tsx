@@ -1,5 +1,5 @@
 "use client";
-
+import Image from "next/image";
 import React, { useEffect, useRef, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -19,7 +19,7 @@ type MapComponentProps = {
 	children?: React.ReactNode;
 };
 
-const flyTo = (map: mapboxgl.Map | null, lng: number, lat: number, zoom: number = 1) => {
+const flyTo = (map: mapboxgl.Map | null, lng: number, lat: number, zoom: number = 14) => {
 	if (map) {
 		map.flyTo({ center: [lng, lat], zoom });
 	}
@@ -43,7 +43,6 @@ export default function MapProvider({ initialViewState, onMapClick, children }: 
 			logoPosition: "bottom-right",
 		});
 
-		// Add navigation and scale controls always
 		map.current.addControl(new mapboxgl.NavigationControl(), "top-right");
 		map.current.addControl(new mapboxgl.ScaleControl({ maxWidth: 100, unit: "metric" }), "bottom-right");
 
@@ -51,7 +50,6 @@ export default function MapProvider({ initialViewState, onMapClick, children }: 
 			setLoaded(true);
 		});
 
-		// Always allow click to flyTo and call onMapClick
 		map.current.on("click", (e) => {
 			flyTo(map.current, e.lngLat.lng, e.lngLat.lat);
 			if (onMapClick) {
@@ -68,14 +66,17 @@ export default function MapProvider({ initialViewState, onMapClick, children }: 
 	}, [initialViewState, onMapClick]);
 
 	return (
-		<div className='relative w-full h-[400px]'>
-			<div ref={mapContainerRef} className='absolute inset-0 w-full h-full rounded-lg shadow' />
+		<div className='relative w-full h-full min-h-[300px]' style={{ minHeight: 300 }}>
+			<div ref={mapContainerRef} className='absolute inset-0 w-full h-full rounded-lg shadow' style={{ minHeight: 300 }} />
 			<MapContext.Provider value={{ map: map.current!, flyTo: (lng: number, lat: number, zoom = 14) => flyTo(map.current, lng, lat, zoom) }}>
 				{children}
 			</MapContext.Provider>
 			{!loaded && (
 				<div className='absolute inset-0 flex items-center justify-center bg-background/80 z-[1000]'>
-					<div className='text-lg font-medium'>Loading map...</div>
+					<div className='flex flex-col items-center space-y-4'>
+						<Image src='/insure-ai.png' alt='Loading...' width={50} height={50} />
+						<div className='text-lg font-medium'>Loading map...</div>
+					</div>
 				</div>
 			)}
 		</div>
