@@ -7,21 +7,26 @@ const MapView = () => {
 	const [isOpenChat, setIsOpenChat] = useState(false);
 
 	return (
-		<div className='container mx-auto'>
-			<div className='grid grid-cols-2 gap-5'>
+		<div className='container mx-auto p-4 h-[calc(100vh-80px)]'>
+			<div className={`grid ${isOpenChat ? "md:grid-cols-2" : "grid-cols-1"} gap-5 h-full`}>
 				<MapProvider
 					initialViewState={{
-						longitude: -74.006,
-						latitude: 40.7128,
-						zoom: 10,
+						longitude: -74.2973,
+						latitude: 4.5709,
+						zoom: 5,
 					}}
 					onMapClick={({ lng, lat }) => {
 						setIsOpenChat(true);
 						console.log("Latitud:", lat, "Longitud:", lng);
 					}}
+					// className="h-[50vh] md:h-full"
 				/>
 
-				<div className=''>{isOpenChat && <Chat />}</div>
+				{isOpenChat && (
+					<div className='h-[50vh] md:h-full'>
+						<Chat />
+					</div>
+				)}
 			</div>
 		</div>
 	);
