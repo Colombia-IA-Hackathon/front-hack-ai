@@ -1,6 +1,6 @@
 export const Navbar = () => {
 	return (
-		<div className='navbar bg-base-100 shadow-sm'>
+		<div className='navbar bg-white px-10 rounded-2xl shadow-sm'>
 			<div className='flex-none'>
 				<label htmlFor='drawer-layout' className='btn btn-primary rounded-2xl drawer-button lg:hidden'>
 					<svg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' className='inline-block h-5 w-5 stroke-current'>
