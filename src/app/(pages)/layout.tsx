@@ -7,7 +7,7 @@ const LayoutDashboard = ({ children }: { children: React.ReactNode }) => {
 	return (
 		<div className='drawer lg:drawer-open'>
 			<input id='drawer-layout' type='checkbox' className='drawer-toggle' />
-			<div className='drawer-content'>
+			<div className='drawer-content bg-white'>
 				<Navbar />
 				{children}
 			</div>
