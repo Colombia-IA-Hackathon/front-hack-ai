@@ -5,7 +5,7 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import MapboxGeocoder from "@mapbox/mapbox-gl-geocoder";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
-import { useOpenChat } from "@/app/store/useOpenChat";
+
 import { useGeo } from "@/app/store/useGeo";
 
 // Extend context to expose flyTo helper
@@ -31,11 +31,11 @@ export default function MapProvider({ initialViewState, onMapClick, children }: 
 			map.flyTo({ center: [lng, lat], zoom });
 		}
 	};
-	const addMarker = (map: mapboxgl.Map | null, lng: number, lat: number) => {
-		if (map) {
-			new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map);
-		}
-	};
+	// const addMarker = (map: mapboxgl.Map | null, lng: number, lat: number) => {
+	// 	if (map) {
+	// 		new mapboxgl.Marker().setLngLat([lng, lat]).addTo(map);
+	// 	}
+	// };
 
 	const { setCoordinates } = useGeo();
 	const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -100,6 +100,7 @@ export default function MapProvider({ initialViewState, onMapClick, children }: 
 				map.current = null;
 			}
 		};
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [initialViewState, onMapClick]);
 
 	return (
