@@ -2,6 +2,7 @@ import { useInsurance } from "@/hooks/insurance";
 import { Hex } from "viem";
 import { useWalletClient } from "wagmi";
 import toast from "react-hot-toast";
+import confetti from "canvas-confetti";
 
 const ButtonTX = () => {
 	const { data: walletClient } = useWalletClient();
@@ -11,6 +12,7 @@ const ButtonTX = () => {
 		createInsuranceClone(undefined, {
 			onSuccess: (hash: Hex) => {
 				toast.success(`Transaction sent: ${hash}`);
+				confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
 			},
 			onError: (error: unknown) => {
 				toast.error(`Error: ${error}`);
