@@ -1,9 +1,14 @@
 "use client";
-
+import { BsArrowsFullscreen } from "react-icons/bs";
 import Image from "next/image";
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import type React from "react";
 import { FaUser } from "react-icons/fa6";
+import { useChatAI } from "@/app/hooks/useChatAI";
+import { useGeo } from "@/app/store/useGeo";
+import { useHistoryChat } from "@/app/store/useHistoryChat";
+import ReactMarkdown from "react-markdown";
 
 interface Message {
 	id: string;
@@ -13,58 +18,85 @@ interface Message {
 }
 
 export default function Chat() {
-	const [messages, setMessages] = useState<Message[]>([]);
+	const { addUserMessage, addBotMessage, messages: globalMessages } = useHistoryChat();
+	const { latitude, longitude } = useGeo();
+	const { mutateAsync: sendInfo, isPending } = useChatAI();
+	const [messages, setMessages] = useState<Message[]>(globalMessages || []);
 	const [input, setInput] = useState("");
-	const [isLoading, setIsLoading] = useState(false);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
+
+	// Sync messages with global state
+	useEffect(() => {
+		setMessages(globalMessages || []);
+	}, [globalMessages]);
 
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
 
-	const simulateBotResponse = (userMessage: string) => {
-		setIsLoading(true);
-		setTimeout(() => {
-			const botMessage: Message = {
-				id: Date.now().toString(),
-				content: `You said: "${userMessage}"`,
-				sender: "bot",
-				timestamp: new Date(),
-			};
-			setMessages((prev) => [...prev, botMessage]);
-			setIsLoading(false);
-		}, 1000);
-	};
+	// const simulateBotResponse = (userMessage: string) => {
+	// 	setIsLoading(true);
+	// 	setTimeout(() => {
+	// 		const botMessage: Message = {
+	// 			id: Date.now().toString(),
+	// 			content: `You said: "${userMessage}"`,
+	// 			sender: "bot",
+	// 			timestamp: new Date(),
+	// 		};
+	// 		setMessages((prev) => [...prev, botMessage]);
+	// 		setIsLoading(false);
+	// 	}, 1000);
+	// };
 
 	const handleSend = (e: React.FormEvent) => {
 		e.preventDefault();
-		if (!input.trim() || isLoading) return;
+		if (!input.trim() || isPending) return;
 
 		const userMessage: Message = {
-			id: Date.now().toString(),
+			id: "1234567890",
 			content: input.trim(),
 			sender: "user",
 			timestamp: new Date(),
 		};
 
 		setMessages((prev) => [...prev, userMessage]);
+		addUserMessage(userMessage.content);
 		setInput("");
-		simulateBotResponse(input);
+
+		sendInfo({
+			id: userMessage.id,
+			message: userMessage.content,
+			lat: latitude ?? 0,
+			long: longitude ?? 0,
+		}).then((response) => {
+			const botMessage: Message = {
+				id: Date.now().toString() + "-bot",
+				content: response.message,
+				sender: "bot",
+				timestamp: new Date(),
+			};
+			setMessages((prev) => [...prev, botMessage]);
+			addBotMessage(botMessage.content);
+		});
 	};
 
-	const formatTime = (date: Date) => {
-		return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+	const formatTime = (date: Date | string) => {
+		const dateObj = typeof date === "string" ? new Date(date) : date;
+		return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 	};
 
 	return (
-		<div className='flex flex-col h-screen max-w-2xl mx-auto shadow-lg rounded-2xl bg-white'>
+		<div className='flex flex-col h-screen mx-auto shadow-lg rounded-2xl bg-white'>
 			<div className='flex items-center p-4 shadow-sm m-2 rounded-2xl bg-white'>
 				<div className='w-10 h-10 rounded-full'>
 					<Image src='/insure-ai.png' alt='Insure AI' width={50} height={50} />
 				</div>
-				<div className='ml-3'>
+				<div className='ml-3 items-center flex justify-between w-full'>
 					<div className='font-medium'>Chat Insure AI</div>
-					{/* <div className='text-xs text-gray-500'>{isLoading ? "Typing..." : "Online"}</div> */}
+
+					<Link href={"/dashboard/chat"} className='text-xs text-blue-500 hover:underline'>
+						<BsArrowsFullscreen className='inline ml-1' />
+					</Link>
 				</div>
 			</div>
 
@@ -86,11 +118,11 @@ export default function Chat() {
 										? "bg-blue-500 text-white rounded-br-none shadow-sm"
 										: "bg-gray-200 text-gray-800 rounded-bl-none shadow-sm"
 								}`}>
-								{message.content.split("\n").map((text, i) => (
-									<p key={i} className={i > 0 ? "mt-2" : ""}>
-										{text}
-									</p>
-								))}
+								{String(message.content || "")
+									.split("\n")
+									.map((text, i) => (
+										<ReactMarkdown key={i}>{`${text || "\u00A0"}`}</ReactMarkdown>
+									))}
 							</div>
 							<div className='text-xs text-gray-500 mt-1'>{formatTime(message.timestamp)}</div>
 						</div>
@@ -103,15 +135,13 @@ export default function Chat() {
 					</div>
 				))}
 
-				{isLoading && (
+				{isPending && (
 					<div className='flex justify-start'>
-						<div className='w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center mr-2'>AI</div>
+						<div className='w-8 h-8 rounded-full  text-white flex items-center justify-center mr-2'>
+							<Image src='/insure-ai.png' alt='Insure AI' width={50} height={50} />
+						</div>
 						<div className='bg-gray-200 px-4 py-2 rounded-lg'>
-							<div className='flex space-x-1'>
-								<div className='w-2 h-2 bg-gray-500 rounded-full animate-bounce'></div>
-								<div className='w-2 h-2 bg-gray-500 rounded-full animate-bounce' style={{ animationDelay: "0.2s" }}></div>
-								<div className='w-2 h-2 bg-gray-500 rounded-full animate-bounce' style={{ animationDelay: "0.4s" }}></div>
-							</div>
+							<span className='loading loading-dots loading-xl'></span>
 						</div>
 					</div>
 				)}
@@ -127,9 +157,9 @@ export default function Chat() {
 						onChange={(e) => setInput(e.target.value)}
 						className='flex-1 px-4 py-2 input rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500'
 						placeholder='Escribe un mensaje...'
-						disabled={isLoading}
+						disabled={isPending}
 					/>
-					<button type='submit' className='btn btn-primary rounded-2xl' disabled={isLoading || !input.trim()}>
+					<button type='submit' className='btn btn-primary rounded-2xl' disabled={isPending || !input.trim()}>
 						Enviar
 					</button>
 				</form>
