@@ -9,6 +9,10 @@ import { useChatAI } from "@/app/hooks/useChatAI";
 import { useGeo } from "@/app/store/useGeo";
 import { useHistoryChat } from "@/app/store/useHistoryChat";
 import ReactMarkdown from "react-markdown";
+import { useRiskStore } from "@/app/store/useRisk";
+
+import { useContractStore } from "@/app/store/useContract";
+import RiskSelector from "../risk";
 
 interface Message {
 	id: string;
@@ -18,6 +22,8 @@ interface Message {
 }
 
 export default function Chat() {
+	const { setContractSend } = useContractStore();
+	const { setRiskLevel, riskLevel } = useRiskStore();
 	const { addUserMessage, addBotMessage, messages: globalMessages } = useHistoryChat();
 	const { latitude, longitude } = useGeo();
 	const { mutateAsync: sendInfo, isPending } = useChatAI();
@@ -25,7 +31,6 @@ export default function Chat() {
 	const [input, setInput] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
-	// Sync messages with global state
 	useEffect(() => {
 		setMessages(globalMessages || []);
 	}, [globalMessages]);
@@ -33,21 +38,6 @@ export default function Chat() {
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
-
-	// const simulateBotResponse = (userMessage: string) => {
-	// 	setIsLoading(true);
-	// 	setTimeout(() => {
-	// 		const botMessage: Message = {
-	// 			id: Date.now().toString(),
-	// 			content: `You said: "${userMessage}"`,
-	// 			sender: "bot",
-	// 			timestamp: new Date(),
-	// 		};
-	// 		setMessages((prev) => [...prev, botMessage]);
-	// 		setIsLoading(false);
-	// 	}, 1000);
-	// };
-
 	const handleSend = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!input.trim() || isPending) return;
@@ -75,16 +65,16 @@ export default function Chat() {
 				sender: "bot",
 				timestamp: new Date(),
 			};
+			setRiskLevel(response.risk);
+			setContractSend(response.contract);
 			setMessages((prev) => [...prev, botMessage]);
 			addBotMessage(botMessage.content);
 		});
 	};
-
 	const formatTime = (date: Date | string) => {
 		const dateObj = typeof date === "string" ? new Date(date) : date;
 		return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 	};
-
 	return (
 		<div className='flex flex-col h-screen mx-auto shadow-lg rounded-2xl bg-white'>
 			<div className='flex items-center p-4 shadow-sm m-2 rounded-2xl bg-white'>
@@ -101,8 +91,7 @@ export default function Chat() {
 			</div>
 
 			<div className='flex-1 overflow-y-auto p-4 space-y-4 shadow-sm m-2 rounded-2xl bg-white'>
-				{messages.length === 0 && <div className='text-center text-gray-500 py-10'>Send a message to start chatting</div>}
-
+				{messages.length === 0 && <div className='text-center text-gray-500 py-10'>Envia un mensaje para iniciar el chat</div>}
 				{messages.map((message) => (
 					<div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
 						{message.sender === "bot" && (
@@ -150,7 +139,9 @@ export default function Chat() {
 			</div>
 
 			<div className='p-4 shadow-sm m-2 rounded-2xl bg-white'>
-				<form onSubmit={handleSend} className='flex gap-2'>
+				<RiskSelector value={riskLevel} />
+
+				<form onSubmit={handleSend} className='flex gap-2 mt-4'>
 					<input
 						type='text'
 						value={input}
