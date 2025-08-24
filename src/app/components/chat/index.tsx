@@ -10,6 +10,7 @@ import { useGeo } from "@/app/store/useGeo";
 import { useHistoryChat } from "@/app/store/useHistoryChat";
 import ReactMarkdown from "react-markdown";
 import { useRiskStore } from "@/app/store/useRisk";
+import { IoReload } from "react-icons/io5";
 
 import { useContractStore } from "@/app/store/useContract";
 import RiskSelector from "../risk";
@@ -22,11 +23,11 @@ interface Message {
 }
 
 export default function Chat() {
-	const { setContractSend } = useContractStore();
+	const { setContractSend, contractSend } = useContractStore();
 	const { setRiskLevel, riskLevel } = useRiskStore();
-	const { addUserMessage, addBotMessage, messages: globalMessages } = useHistoryChat();
+	const { addUserMessage, addBotMessage, messages: globalMessages, clearMessages } = useHistoryChat();
 	const { latitude, longitude } = useGeo();
-	const { mutateAsync: sendInfo, isPending } = useChatAI();
+	const { mutateAsync: sendInfo, isPending, isError } = useChatAI();
 	const [messages, setMessages] = useState<Message[]>(globalMessages || []);
 	const [input, setInput] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -75,6 +76,20 @@ export default function Chat() {
 		const dateObj = typeof date === "string" ? new Date(date) : date;
 		return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 	};
+
+	useEffect(() => {
+		if (isError) {
+			const errorMessage: Message = {
+				id: Date.now().toString() + "-error",
+				content: "Hubo un error al procesar tu solicitud. Por favor, intenta de nuevo.",
+				sender: "bot",
+				timestamp: new Date(),
+			};
+			setMessages((prev) => [...prev, errorMessage]);
+			addBotMessage(errorMessage.content);
+		}
+	}, [isError, addBotMessage]);
+
 	return (
 		<div className='flex flex-col h-screen mx-auto shadow-lg rounded-2xl bg-white'>
 			<div className='flex items-center p-4 shadow-sm m-2 rounded-2xl bg-white'>
@@ -83,10 +98,21 @@ export default function Chat() {
 				</div>
 				<div className='ml-3 items-center flex justify-between w-full'>
 					<div className='font-medium'>Chat Insure AI</div>
-
-					<Link href={"/dashboard/chat"} className='text-xs text-blue-500 hover:underline'>
-						<BsArrowsFullscreen className='inline ml-1' />
-					</Link>
+					<div className='gap-2 flex items-center'>
+						<Link href={"/dashboard/chat"} className='text-xs text-blue-500 hover:underline'>
+							<BsArrowsFullscreen className='inline ml-1' />
+						</Link>
+						<button
+							className='text-lg text-red-500 hover:underline'
+							onClick={() => {
+								clearMessages();
+								setMessages([]);
+								setRiskLevel(0);
+								setContractSend(false);
+							}}>
+							<IoReload className='inline ml-1' />
+						</button>
+					</div>
 				</div>
 			</div>
 
@@ -139,8 +165,12 @@ export default function Chat() {
 			</div>
 
 			<div className='p-4 shadow-sm m-2 rounded-2xl bg-white'>
-				<RiskSelector value={riskLevel} />
-
+				{riskLevel > 0 && <RiskSelector value={riskLevel} />}
+				{contractSend && (
+					<button className='btn btn-primary mb-4 w-full' onClick={() => setContractSend(false)}>
+						Pagar poliza
+					</button>
+				)}
 				<form onSubmit={handleSend} className='flex gap-2 mt-4'>
 					<input
 						type='text'
