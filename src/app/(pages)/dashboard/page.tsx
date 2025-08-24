@@ -9,12 +9,9 @@ const Home = () => {
 				<div className='col-span-7 row-span-2 bg-white rounded-2xl shadow-sm overflow-hidden h-[450px] border border-gray-100'>
 					<MapProvider
 						initialViewState={{
-							longitude: -74.006,
-							latitude: 40.7128,
-							zoom: 10,
-						}}
-						onMapClick={({ lng, lat }) => {
-							console.log("Latitud:", lat, "Longitud:", lng);
+							longitude: -74.2973,
+							latitude: 4.5709,
+							zoom: 1,
 						}}
 					/>
 				</div>
