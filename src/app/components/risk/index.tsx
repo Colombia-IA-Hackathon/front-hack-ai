@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
-import { FaChevronUp } from "react-icons/fa6";
+"use client";
+
+import { useState } from "react";
 
 interface RiskSelectorProps {
 	value?: number;
@@ -8,80 +9,51 @@ interface RiskSelectorProps {
 }
 
 const riskLevels = [
-	{ id: 1, label: "Bajo", color: "bg-green-500 hover:bg-green-600", textColor: "text-white" },
-	{ id: 2, label: "Medio", color: "bg-yellow-500 hover:bg-yellow-600", textColor: "text-white" },
-	{ id: 3, label: "Alto", color: "bg-red-500 hover:bg-red-600", textColor: "text-white" },
+	{ id: 3, label: "Alto", color: "bg-red-500", fillColor: "bg-red-400" },
+	{ id: 2, label: "Medio", color: "bg-yellow-500", fillColor: "bg-yellow-400" },
+	{ id: 1, label: "Bajo", color: "bg-green-500", fillColor: "bg-green-400" },
 ];
 
 export default function RiskSelector({ value, onChange, className = "" }: RiskSelectorProps) {
 	const [selectedLevel, setSelectedLevel] = useState(value || 1);
 
-	useEffect(() => {
-		if (value !== undefined && value !== selectedLevel) {
-			setSelectedLevel(value);
-		}
-	}, [value]);
-
-	const isControlled = value !== undefined;
-
-	const handleLevelChange = (level: number) => {
-		if (isControlled) return; // Block click if controlled
-		setSelectedLevel(level);
-		onChange?.(level);
-	};
-
 	return (
-		<div className={`relative w-full max-w-md mx-auto ${className}`}>
-			{/* Risk Level Buttons */}
-			<div className='flex rounded-lg overflow-hidden shadow-lg border border-gray-200'>
+		<div className={`flex items-center justify-center gap-8 ${className}`}>
+			<div className='relative'>
+				<div className='w-8 h-48 bg-gray-200 rounded-full relative overflow-hidden shadow-inner'>
+					<div
+						className={`absolute bottom-0 left-0 right-0 transition-all duration-500 ease-out rounded-full ${
+							selectedLevel === 1 ? "h-1/3 bg-green-400" : selectedLevel === 2 ? "h-2/3 bg-yellow-400" : "h-full bg-red-400"
+						}`}
+					/>
+					<div className='absolute inset-0 flex flex-col justify-between py-2'>
+						<div className='w-full h-px bg-white/30' />
+						<div className='w-full h-px bg-white/30' />
+						<div className='w-full h-px bg-white/30' />
+					</div>
+				</div>
+				<div
+					className={`absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-12 h-12 rounded-full shadow-lg transition-colors duration-500 ${
+						selectedLevel === 1 ? "bg-green-500" : selectedLevel === 2 ? "bg-yellow-500" : "bg-red-500"
+					}`}>
+					<div className='absolute inset-2 bg-white/20 rounded-full' />
+				</div>
+			</div>
+			<div className='flex flex-col gap-3'>
 				{riskLevels.map((risk) => (
 					<button
 						key={risk.id}
-						onClick={() => handleLevelChange(risk.id)}
+						disabled
 						className={`
-								flex-1 py-3 px-4 font-medium transition-all duration-200
-								${risk.color} ${risk.textColor}
-								${selectedLevel === risk.id ? "ring-4 ring-blue-500 scale-105 shadow-lg z-10" : "opacity-70"}
-								${isControlled ? "cursor-not-allowed opacity-60" : ""}
-								focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
-								active:scale-95
-							`}
-						style={selectedLevel === risk.id ? { fontWeight: 700, boxShadow: "0 4px 24px 0 rgba(0,0,0,0.10)" } : {}}
+			  px-6 py-3 rounded-lg font-medium transition-all duration-200 min-w-[100px]
+			  ${selectedLevel === risk.id ? `${risk.color} text-white shadow-lg scale-105 ring-2 ring-offset-2 ring-gray-300` : "bg-gray-100 text-gray-700"}
+			  opacity-70 cursor-not-allowed
+			`}
 						aria-pressed={selectedLevel === risk.id}
-						aria-label={`Seleccionar nivel de riesgo ${risk.label.toLowerCase()}`}
-						disabled={isControlled}>
+						aria-label={`Seleccionar nivel de riesgo ${risk.label.toLowerCase()}`}>
 						{risk.label}
 					</button>
 				))}
-			</div>
-
-			{/* Active Indicator */}
-			{isControlled && (
-				<div className='flex justify-between mt-2 px-2'>
-					{riskLevels.map((risk) => (
-						<div
-							key={risk.id}
-							className={`
-								flex-1 flex justify-center transition-all duration-300
-								${selectedLevel === risk.id ? "opacity-100 transform translate-y-0" : "opacity-0 transform translate-y-2"}
-							`}>
-							<FaChevronUp className='w-6 h-6 text-gray-600 animate-bounce' aria-hidden='true' />
-						</div>
-					))}
-				</div>
-			)}
-
-			{/* Selected Level Info */}
-			<div className='mt-4 text-center'>
-				<p className='text-sm text-gray-600'>
-					Nivel de riesgo:
-					<span
-						className={`ml-1 font-semibold ${
-							selectedLevel === 1 ? "text-green-600" : selectedLevel === 2 ? "text-yellow-600" : "text-red-600"
-						}`}>
-						{riskLevels.find((r) => r.id === selectedLevel)?.label}
-					</span>
-				</p>
 			</div>
 		</div>
 	);
