@@ -14,6 +14,7 @@ import { IoReload } from "react-icons/io5";
 
 import { useContractStore } from "@/app/store/useContract";
 import RiskSelector from "../risk";
+import ButtonTX from "../buttonSendTx";
 
 interface Message {
 	id: string;
@@ -39,6 +40,7 @@ export default function Chat() {
 	useEffect(() => {
 		messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 	}, [messages]);
+
 	const handleSend = (e: React.FormEvent) => {
 		e.preventDefault();
 		if (!input.trim() || isPending) return;
@@ -67,11 +69,12 @@ export default function Chat() {
 				timestamp: new Date(),
 			};
 			setRiskLevel(response.risk);
-			setContractSend(response.contract);
+			setContractSend(response.contract || response.ejecutar_contrato);
 			setMessages((prev) => [...prev, botMessage]);
 			addBotMessage(botMessage.content);
 		});
 	};
+	// Eliminado: el mensaje automático solo debe enviarse por clic real en el mapa
 	const formatTime = (date: Date | string) => {
 		const dateObj = typeof date === "string" ? new Date(date) : date;
 		return dateObj.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -91,7 +94,7 @@ export default function Chat() {
 	}, [isError, addBotMessage]);
 
 	return (
-		<div className='flex flex-col h-screen mx-auto shadow-lg rounded-2xl bg-white'>
+		<div className='flex flex-col h-[700px] mx-auto shadow-lg rounded-2xl bg-white'>
 			<div className='flex items-center p-4 shadow-sm m-2 rounded-2xl bg-white'>
 				<div className='w-10 h-10 rounded-full'>
 					<Image src='/insure-ai.png' alt='Insure AI' width={50} height={50} />
@@ -165,12 +168,10 @@ export default function Chat() {
 			</div>
 
 			<div className='p-4 shadow-sm m-2 rounded-2xl bg-white'>
-				{riskLevel > 0 && <RiskSelector value={riskLevel} />}
-				{contractSend && (
-					<button className='btn btn-primary mb-4 w-full' onClick={() => setContractSend(false)}>
-						Pagar poliza
-					</button>
-				)}
+				<div className='mb-2 flex items-center justify-center flex-col gap-10'>
+					{contractSend && <ButtonTX />}
+					{riskLevel > 0 && <RiskSelector value={riskLevel} />}
+				</div>
 				<form onSubmit={handleSend} className='flex gap-2 mt-4'>
 					<input
 						type='text'
