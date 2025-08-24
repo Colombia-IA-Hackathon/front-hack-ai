@@ -14,8 +14,8 @@ const riskLevels = [
 	{ id: 1, label: "Bajo", color: "bg-green-500", fillColor: "bg-green-400" },
 ];
 
-export default function RiskSelector({ value, onChange, className = "" }: RiskSelectorProps) {
-	const [selectedLevel, setSelectedLevel] = useState(value || 1);
+export default function RiskSelector({ value, className = "" }: RiskSelectorProps) {
+	const [selectedLevel] = useState(value || 1);
 
 	return (
 		<div className={`flex items-center justify-center gap-8 ${className}`}>
